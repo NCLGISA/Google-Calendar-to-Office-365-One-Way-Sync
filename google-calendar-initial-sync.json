@@ -1,0 +1,395 @@
+{
+  "name": "Google Calendar Initial Sync (One-Time)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Calculate date range: today to 2 years from now\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nconst twoYearsFromNow = new Date();\ntwoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);\n\nreturn {\n  json: {\n    timeMin: today.toISOString(),\n    timeMax: twoYearsFromNow.toISOString()\n  }\n};"
+      },
+      "id": "code-calc-dates",
+      "name": "Calculate Date Range",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleCalendarOAuth2Api",
+        "options": {
+          "qs": {
+            "values": [
+              {
+                "name": "timeMin",
+                "value": "={{ $json.timeMin }}"
+              },
+              {
+                "name": "timeMax",
+                "value": "={{ $json.timeMax }}"
+              },
+              {
+                "name": "singleEvents",
+                "value": "true"
+              },
+              {
+                "name": "orderBy",
+                "value": "startTime"
+              },
+              {
+                "name": "maxResults",
+                "value": "2500"
+              },
+              {
+                "name": "conferenceDataVersion",
+                "value": "1"
+              }
+            ]
+          }
+        }
+      },
+      "id": "http-get-all-events",
+      "name": "Get All Google Calendar Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "googleCalendarCredential",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extract events array from Google Calendar response\nconst response = $input.item.json;\nconst events = response.items || [];\n\nconsole.log(`Found ${events.length} events in Google Calendar`);\n\n// Return the events array for the next node to split\nreturn {\n  json: {\n    events: events,\n    totalCount: events.length\n  }\n};"
+      },
+      "id": "code-extract-events",
+      "name": "Extract Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "events",
+        "options": {}
+      },
+      "id": "split-events",
+      "name": "Split Into Individual Events",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1140, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\n\n// Skip cancelled events\nif (event.status === 'cancelled') {\n  return { json: { skip: true, reason: 'Event is cancelled' } };\n}\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use same format as the trigger workflow\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    skip: false,\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity\n  }\n};"
+      },
+      "id": "code-transform-event",
+      "name": "Transform Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1360, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.skip }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "if-not-skip",
+      "name": "Should Process?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1580, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://graph.microsoft.com/v1.0/me/calendar/events",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "outlook.body-content-type=\"text\""
+            }
+          ]
+        },
+        "options": {
+          "qs": {
+            "values": [
+              {
+                "name": "$filter",
+                "value": "categories/any(c:c eq 'Strike Team')"
+              },
+              {
+                "name": "$select",
+                "value": "id,subject,body,bodyPreview"
+              },
+              {
+                "name": "$top",
+                "value": "500"
+              }
+            ]
+          }
+        }
+      },
+      "id": "http-get-existing-synced",
+      "name": "Get Existing Synced Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1840, 220],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "microsoftOutlookCredential",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Check if this event already exists in Office 365\nconst response = $input.item.json;\nconst syncedEvents = response.value || [];\nconst transformedData = $('Transform Event').item.json;\nconst trackingId = transformedData.trackingId;\n\n// Search for existing event with same tracking ID\nlet alreadyExists = false;\nfor (const event of syncedEvents) {\n  const bodyContent = event.body?.content || '';\n  const bodyPreview = event.bodyPreview || '';\n  \n  if (bodyContent.includes(`GCAL_SYNC_ID:${trackingId}`) || bodyPreview.includes(`GCAL_SYNC_ID:${trackingId}`)) {\n    alreadyExists = true;\n    console.log(`Event already exists: ${transformedData.subject}`);\n    break;\n  }\n}\n\nreturn {\n  json: {\n    alreadyExists: alreadyExists,\n    ...transformedData\n  }\n};"
+      },
+      "id": "code-check-duplicate",
+      "name": "Check for Duplicate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2100, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.alreadyExists }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "if-not-duplicate",
+      "name": "Not Already Synced?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2320, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.microsoft.com/v1.0/me/calendar/events",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [\"Strike Team\"],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "id": "http-create-event",
+      "name": "Create Event in Office 365",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2580, 140],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "microsoftOutlookCredential",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "noop-created",
+      "name": "Event Created",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2840, 140]
+    },
+    {
+      "parameters": {},
+      "id": "noop-skipped-duplicate",
+      "name": "Skipped (Already Exists)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2580, 300]
+    },
+    {
+      "parameters": {},
+      "id": "noop-skipped-cancelled",
+      "name": "Skipped (Cancelled)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1840, 380]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Calculate Date Range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Date Range": {
+      "main": [
+        [
+          {
+            "node": "Get All Google Calendar Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Google Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Extract Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Events": {
+      "main": [
+        [
+          {
+            "node": "Split Into Individual Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Individual Events": {
+      "main": [
+        [
+          {
+            "node": "Transform Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Event": {
+      "main": [
+        [
+          {
+            "node": "Should Process?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Process?": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Synced Events",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skipped (Cancelled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Synced Events": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Not Already Synced?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Not Already Synced?": {
+      "main": [
+        [
+          {
+            "node": "Create Event in Office 365",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skipped (Already Exists)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Event in Office 365": {
+      "main": [
+        [
+          {
+            "node": "Event Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1
+}

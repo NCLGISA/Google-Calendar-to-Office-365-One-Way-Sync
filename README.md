@@ -2,6 +2,13 @@
 
 An n8n workflow that provides one-way synchronization from your Google Calendar to your Office 365 calendar.
 
+## Included Workflows
+
+| File | Purpose |
+|------|---------|
+| `google-calendar-to-office365-sync.json` | **Ongoing Sync** - Trigger-based workflow that syncs new, updated, and cancelled events in real-time |
+| `google-calendar-initial-sync.json` | **Initial Sync** - One-time manual workflow to backfill existing events (today to 2 years ahead) |
+
 ## Features
 
 - **Real-time sync** using Google Calendar triggers
@@ -143,6 +150,34 @@ When a Google Calendar event includes a Google Meet video conference, the follow
   - 📹 Video link with meeting code
   - 📞 Phone dial-in numbers with PINs
   - 🖥️ SIP addresses for room systems
+
+## Initial Sync (One-Time Backfill)
+
+The `google-calendar-initial-sync.json` workflow is designed to run once to sync all existing Google Calendar events to Office 365.
+
+### What It Does
+
+1. Fetches all events from today to 2 years in the future
+2. Expands recurring events into individual instances
+3. Checks each event against existing Office 365 "Strike Team" events
+4. Creates only events that don't already exist (duplicate prevention)
+5. Applies the same formatting, Google Meet details, and tracking ID as the ongoing sync
+
+### How to Use
+
+1. Import `google-calendar-initial-sync.json` into n8n
+2. Configure your Google Calendar and Microsoft Outlook credentials
+3. Click **Execute Workflow** to run it manually
+4. Wait for it to complete (may take a few minutes depending on number of events)
+5. Check your Office 365 calendar - all events should now be synced
+
+### Rate Limiting
+
+The workflow includes batching (5 events per second) to avoid hitting Microsoft Graph API rate limits. If you have many events, it may take a few minutes to complete.
+
+### Running Multiple Times
+
+It's safe to run this workflow multiple times. It checks for existing events by tracking ID and skips any that are already synced.
 
 ## Troubleshooting
 
