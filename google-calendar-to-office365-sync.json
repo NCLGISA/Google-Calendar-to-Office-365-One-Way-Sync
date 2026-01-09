@@ -3,84 +3,102 @@
   "nodes": [
     {
       "parameters": {
-        "keepOnlySet": false,
-        "values": {
-          "string": [
+        "assignments": {
+          "assignments": [
             {
+              "id": "config-google-cal",
               "name": "googleCalendarId",
-              "value": "primary"
+              "value": "primary",
+              "type": "string"
             },
             {
+              "id": "config-o365-cal",
               "name": "office365CalendarName",
-              "value": "Calendar"
+              "value": "Calendar",
+              "type": "string"
             },
             {
+              "id": "config-category",
               "name": "categoryName",
-              "value": "Strike Team"
+              "value": "Strike Team",
+              "type": "string"
             }
           ]
-        }
+        },
+        "options": {}
       },
       "id": "set-config-create",
       "name": "⚙️ CONFIG (Create)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 2,
+      "typeVersion": 3.4,
       "position": [480, 180],
       "notesInFlow": true,
       "notes": "Configure your calendars here:\n- googleCalendarId: Use 'primary' for default, or calendar ID\n- office365CalendarName: Name of Office 365 calendar\n- categoryName: Category for synced events"
     },
     {
       "parameters": {
-        "keepOnlySet": false,
-        "values": {
-          "string": [
+        "assignments": {
+          "assignments": [
             {
+              "id": "config-google-cal-2",
               "name": "googleCalendarId",
-              "value": "primary"
+              "value": "primary",
+              "type": "string"
             },
             {
+              "id": "config-o365-cal-2",
               "name": "office365CalendarName",
-              "value": "Calendar"
+              "value": "Calendar",
+              "type": "string"
             },
             {
+              "id": "config-category-2",
               "name": "categoryName",
-              "value": "Strike Team"
+              "value": "Strike Team",
+              "type": "string"
             }
           ]
-        }
+        },
+        "options": {}
       },
       "id": "set-config-update",
       "name": "⚙️ CONFIG (Update)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 2,
+      "typeVersion": 3.4,
       "position": [480, 500],
       "notesInFlow": true,
       "notes": "Keep these values in sync with CONFIG (Create)"
     },
     {
       "parameters": {
-        "keepOnlySet": false,
-        "values": {
-          "string": [
+        "assignments": {
+          "assignments": [
             {
+              "id": "config-google-cal-3",
               "name": "googleCalendarId",
-              "value": "primary"
+              "value": "primary",
+              "type": "string"
             },
             {
+              "id": "config-o365-cal-3",
               "name": "office365CalendarName",
-              "value": "Calendar"
+              "value": "Calendar",
+              "type": "string"
             },
             {
+              "id": "config-category-3",
               "name": "categoryName",
-              "value": "Strike Team"
+              "value": "Strike Team",
+              "type": "string"
             }
           ]
-        }
+        },
+        "options": {}
       },
       "id": "set-config-delete",
       "name": "⚙️ CONFIG (Delete)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 2,
+      "typeVersion": 3.4,
       "position": [480, 820],
       "notesInFlow": true,
       "notes": "Keep these values in sync with CONFIG (Create)"
@@ -88,13 +106,13 @@
     {
       "parameters": {
         "triggerOn": "eventCreated",
-        "calendarId": "={{ $json.googleCalendarId }}",
+        "calendarId": "primary",
         "options": {}
       },
       "id": "trigger-event-created",
       "name": "Google Calendar - Event Created",
       "type": "n8n-nodes-base.googleCalendarTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [260, 180],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -106,13 +124,13 @@
     {
       "parameters": {
         "triggerOn": "eventUpdated",
-        "calendarId": "={{ $json.googleCalendarId }}",
+        "calendarId": "primary",
         "options": {}
       },
       "id": "trigger-event-updated",
       "name": "Google Calendar - Event Updated",
       "type": "n8n-nodes-base.googleCalendarTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [260, 500],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -124,13 +142,13 @@
     {
       "parameters": {
         "triggerOn": "eventCancelled",
-        "calendarId": "={{ $json.googleCalendarId }}",
+        "calendarId": "primary",
         "options": {}
       },
       "id": "trigger-event-cancelled",
       "name": "Google Calendar - Event Cancelled",
       "type": "n8n-nodes-base.googleCalendarTrigger",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [260, 820],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -192,7 +210,7 @@
       "id": "http-get-full-event-create",
       "name": "Get Full Event Details (Create)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [920, 180],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -221,7 +239,7 @@
       "id": "http-get-full-event-update",
       "name": "Get Full Event Details (Update)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [920, 500],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -274,7 +292,7 @@
       "id": "http-get-calendars-create",
       "name": "Get O365 Calendars (Create)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [1360, 180],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -308,7 +326,7 @@
       "id": "http-create-event",
       "name": "Create Event in Office 365",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [1800, 180],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -328,7 +346,7 @@
       "id": "http-get-calendars-update",
       "name": "Get O365 Calendars (Update)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [1360, 500],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -385,7 +403,7 @@
       "id": "http-get-synced-events-update",
       "name": "Get Synced Events (Update)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [1800, 500],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -405,7 +423,7 @@
       "id": "http-get-calendars-delete",
       "name": "Get O365 Calendars (Delete)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [1140, 820],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -462,7 +480,7 @@
       "id": "http-get-synced-events-delete",
       "name": "Get Synced Events (Delete)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [1580, 820],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -496,35 +514,59 @@
     {
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
             {
-              "value1": "={{ $json.found }}",
-              "value2": true
+              "id": "condition-found",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
-        }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
       "id": "if-found-update",
       "name": "Event Found?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [2240, 500]
     },
     {
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
             {
-              "value1": "={{ $json.found }}",
-              "value2": true
+              "id": "condition-found-delete",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
-        }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       },
       "id": "if-found-delete",
       "name": "Event Found for Delete?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [2020, 820]
     },
     {
@@ -541,7 +583,7 @@
       "id": "http-update-event",
       "name": "Update Event in Office 365",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [2500, 420],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -564,7 +606,7 @@
       "id": "http-create-event-from-update",
       "name": "Create Event (Not Found)",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [2500, 580],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
@@ -584,7 +626,7 @@
       "id": "http-delete-event",
       "name": "Delete Event from Office 365",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 4.2,
       "position": [2280, 760],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
