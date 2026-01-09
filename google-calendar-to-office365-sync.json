@@ -3,6 +3,7 @@
   "nodes": [
     {
       "parameters": {
+        "keepOnlySet": false,
         "values": {
           "string": [
             {
@@ -18,19 +19,19 @@
               "value": "Strike Team"
             }
           ]
-        },
-        "options": {}
+        }
       },
       "id": "set-config-create",
       "name": "⚙️ CONFIG (Create)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.2,
+      "typeVersion": 2,
       "position": [480, 180],
       "notesInFlow": true,
       "notes": "Configure your calendars here:\n- googleCalendarId: Use 'primary' for default, or calendar ID\n- office365CalendarName: Name of Office 365 calendar\n- categoryName: Category for synced events"
     },
     {
       "parameters": {
+        "keepOnlySet": false,
         "values": {
           "string": [
             {
@@ -46,19 +47,19 @@
               "value": "Strike Team"
             }
           ]
-        },
-        "options": {}
+        }
       },
       "id": "set-config-update",
       "name": "⚙️ CONFIG (Update)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.2,
+      "typeVersion": 2,
       "position": [480, 500],
       "notesInFlow": true,
       "notes": "Keep these values in sync with CONFIG (Create)"
     },
     {
       "parameters": {
+        "keepOnlySet": false,
         "values": {
           "string": [
             {
@@ -74,13 +75,12 @@
               "value": "Strike Team"
             }
           ]
-        },
-        "options": {}
+        }
       },
       "id": "set-config-delete",
       "name": "⚙️ CONFIG (Delete)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.2,
+      "typeVersion": 2,
       "position": [480, 820],
       "notesInFlow": true,
       "notes": "Keep these values in sync with CONFIG (Create)"
