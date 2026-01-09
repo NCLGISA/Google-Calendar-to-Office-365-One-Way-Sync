@@ -38,7 +38,7 @@
       "id": "set-config",
       "name": "⚙️ CONFIGURATION",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "typeVersion": 3.3,
       "position": [480, 300],
       "notesInFlow": true,
       "notes": "Configure your calendars here:\n- googleCalendarId: Use 'primary' for default, or the calendar ID from Google Calendar settings\n- office365CalendarName: The name of your Office 365 calendar (e.g., 'Calendar')\n- categoryName: The category to apply to synced events"

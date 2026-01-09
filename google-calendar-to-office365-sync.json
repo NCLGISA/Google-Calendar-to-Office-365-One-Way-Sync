@@ -30,7 +30,7 @@
       "id": "set-config-create",
       "name": "⚙️ CONFIG (Create)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "typeVersion": 3.3,
       "position": [480, 180],
       "notesInFlow": true,
       "notes": "Configure your calendars here:\n- googleCalendarId: Use 'primary' for default, or calendar ID\n- office365CalendarName: Name of Office 365 calendar\n- categoryName: Category for synced events"
@@ -64,7 +64,7 @@
       "id": "set-config-update",
       "name": "⚙️ CONFIG (Update)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "typeVersion": 3.3,
       "position": [480, 500],
       "notesInFlow": true,
       "notes": "Keep these values in sync with CONFIG (Create)"
@@ -98,7 +98,7 @@
       "id": "set-config-delete",
       "name": "⚙️ CONFIG (Delete)",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "typeVersion": 3.3,
       "position": [480, 820],
       "notesInFlow": true,
       "notes": "Keep these values in sync with CONFIG (Create)"
@@ -112,7 +112,7 @@
       "id": "trigger-event-created",
       "name": "Google Calendar - Event Created",
       "type": "n8n-nodes-base.googleCalendarTrigger",
-      "typeVersion": 1.1,
+      "typeVersion": 1,
       "position": [260, 180],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -130,7 +130,7 @@
       "id": "trigger-event-updated",
       "name": "Google Calendar - Event Updated",
       "type": "n8n-nodes-base.googleCalendarTrigger",
-      "typeVersion": 1.1,
+      "typeVersion": 1,
       "position": [260, 500],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -148,7 +148,7 @@
       "id": "trigger-event-cancelled",
       "name": "Google Calendar - Event Cancelled",
       "type": "n8n-nodes-base.googleCalendarTrigger",
-      "typeVersion": 1.1,
+      "typeVersion": 1,
       "position": [260, 820],
       "credentials": {
         "googleCalendarOAuth2Api": {
