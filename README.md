@@ -59,13 +59,23 @@ After importing, you'll need to connect your credentials:
 1. Click on each **HTTP Request** node that calls Microsoft Graph API
 2. Select your Microsoft Outlook OAuth2 credentials
 
-### Step 3: Verify Calendar Names
+### Step 3: Configure Your Calendars
 
-1. **Google Calendar**: The workflow is configured to watch the "Calendar" calendar
-   - If your calendar has a different name/ID, update the `calendarId` in all three Google Calendar Trigger nodes
-   
-2. **Office 365 Calendar**: The workflow targets the default calendar
-   - Events are created via the Microsoft Graph API at `/me/calendar/events`
+Both workflows include a **⚙️ CONFIGURATION** node where you can easily set:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `googleCalendarId` | The Google Calendar to sync FROM. Use `primary` for your main calendar, or the calendar ID from Google Calendar settings. | `primary` |
+| `office365CalendarName` | The name of the Office 365 calendar to sync TO. | `Calendar` |
+| `categoryName` | The category to apply to synced events. Must exist in Office 365. | `Strike Team` |
+
+**To find your Google Calendar ID:**
+1. Go to Google Calendar settings
+2. Click on your calendar
+3. Scroll to "Integrate calendar"
+4. Copy the Calendar ID
+
+**For the ongoing sync workflow:** You'll see 3 CONFIG nodes (one for each trigger). Keep all three in sync with the same values.
 
 ### Step 4: Activate the Workflow
 

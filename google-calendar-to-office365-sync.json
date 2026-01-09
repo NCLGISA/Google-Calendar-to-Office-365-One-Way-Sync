@@ -3,8 +3,92 @@
   "nodes": [
     {
       "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "googleCalendarId",
+              "value": "primary"
+            },
+            {
+              "name": "office365CalendarName",
+              "value": "Calendar"
+            },
+            {
+              "name": "categoryName",
+              "value": "Strike Team"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-config-create",
+      "name": "⚙️ CONFIG (Create)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [480, 180],
+      "notesInFlow": true,
+      "notes": "Configure your calendars here:\n- googleCalendarId: Use 'primary' for default, or calendar ID\n- office365CalendarName: Name of Office 365 calendar\n- categoryName: Category for synced events"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "googleCalendarId",
+              "value": "primary"
+            },
+            {
+              "name": "office365CalendarName",
+              "value": "Calendar"
+            },
+            {
+              "name": "categoryName",
+              "value": "Strike Team"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-config-update",
+      "name": "⚙️ CONFIG (Update)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [480, 500],
+      "notesInFlow": true,
+      "notes": "Keep these values in sync with CONFIG (Create)"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "googleCalendarId",
+              "value": "primary"
+            },
+            {
+              "name": "office365CalendarName",
+              "value": "Calendar"
+            },
+            {
+              "name": "categoryName",
+              "value": "Strike Team"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-config-delete",
+      "name": "⚙️ CONFIG (Delete)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [480, 820],
+      "notesInFlow": true,
+      "notes": "Keep these values in sync with CONFIG (Create)"
+    },
+    {
+      "parameters": {
         "triggerOn": "eventCreated",
-        "calendarId": "Calendar",
+        "calendarId": "={{ $json.googleCalendarId }}",
         "options": {}
       },
       "id": "trigger-event-created",
@@ -22,7 +106,7 @@
     {
       "parameters": {
         "triggerOn": "eventUpdated",
-        "calendarId": "Calendar",
+        "calendarId": "={{ $json.googleCalendarId }}",
         "options": {}
       },
       "id": "trigger-event-updated",
@@ -40,7 +124,7 @@
     {
       "parameters": {
         "triggerOn": "eventCancelled",
-        "calendarId": "Calendar",
+        "calendarId": "={{ $json.googleCalendarId }}",
         "options": {}
       },
       "id": "trigger-event-cancelled",
@@ -57,8 +141,41 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Merge trigger data with config\nconst triggerData = $('Google Calendar - Event Created').item.json;\nconst config = $input.item.json;\n\nreturn {\n  json: {\n    ...triggerData,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName,\n    googleCalendarId: config.googleCalendarId\n  }\n};"
+      },
+      "id": "code-merge-config-create",
+      "name": "Merge Config (Create)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 180]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Merge trigger data with config\nconst triggerData = $('Google Calendar - Event Updated').item.json;\nconst config = $input.item.json;\n\nreturn {\n  json: {\n    ...triggerData,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName,\n    googleCalendarId: config.googleCalendarId\n  }\n};"
+      },
+      "id": "code-merge-config-update",
+      "name": "Merge Config (Update)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 500]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Merge trigger data with config\nconst triggerData = $('Google Calendar - Event Cancelled').item.json;\nconst config = $input.item.json;\n\nreturn {\n  json: {\n    ...triggerData,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName,\n    googleCalendarId: config.googleCalendarId\n  }\n};"
+      },
+      "id": "code-merge-config-delete",
+      "name": "Merge Config (Delete)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 820]
+    },
+    {
+      "parameters": {
         "method": "GET",
-        "url": "=https://www.googleapis.com/calendar/v3/calendars/primary/events/{{ $json.id }}",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/{{ encodeURIComponent($json.googleCalendarId) }}/events/{{ $json.id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleCalendarOAuth2Api",
         "options": {
@@ -76,7 +193,7 @@
       "name": "Get Full Event Details (Create)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [520, 180],
+      "position": [920, 180],
       "credentials": {
         "googleCalendarOAuth2Api": {
           "id": "googleCalendarCredential",
@@ -87,7 +204,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://www.googleapis.com/calendar/v3/calendars/primary/events/{{ $json.id }}",
+        "url": "=https://www.googleapis.com/calendar/v3/calendars/{{ encodeURIComponent($json.googleCalendarId) }}/events/{{ $json.id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleCalendarOAuth2Api",
         "options": {
@@ -105,7 +222,7 @@
       "name": "Get Full Event Details (Update)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [520, 500],
+      "position": [920, 500],
       "credentials": {
         "googleCalendarOAuth2Api": {
           "id": "googleCalendarCredential",
@@ -116,52 +233,83 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity\n  }\n};"
+        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\nconst config = $('Merge Config (Create)').item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName\n  }\n};"
       },
       "id": "code-transform-create",
       "name": "Transform for Create",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [780, 180]
+      "position": [1140, 180]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity\n  }\n};"
+        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\nconst config = $('Merge Config (Update)').item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName\n  }\n};"
       },
       "id": "code-transform-update",
       "name": "Transform for Update",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [780, 500]
+      "position": [1140, 500]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Extract tracking ID for deletion\nconst event = $input.item.json;\n\nreturn {\n  json: {\n    trackingId: event.id\n  }\n};"
+        "jsCode": "// Extract tracking ID for deletion\nconst event = $input.item.json;\n\nreturn {\n  json: {\n    trackingId: event.id,\n    office365CalendarName: event.office365CalendarName,\n    categoryName: event.categoryName\n  }\n};"
       },
       "id": "code-extract-delete-id",
       "name": "Extract Delete ID",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [520, 820]
+      "position": [920, 820]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://graph.microsoft.com/v1.0/me/calendars",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "options": {}
+      },
+      "id": "http-get-calendars-create",
+      "name": "Get O365 Calendars (Create)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1360, 180],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "microsoftOutlookCredential",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Find the target calendar ID by name\nconst response = $input.item.json;\nconst calendars = response.value || [];\nconst transformedData = $('Transform for Create').item.json;\nconst targetCalendarName = transformedData.office365CalendarName;\n\n// Find calendar by name\nlet targetCalendar = calendars.find(c => c.name === targetCalendarName);\n\n// Fallback to default calendar if not found\nif (!targetCalendar) {\n  targetCalendar = calendars.find(c => c.isDefaultCalendar) || calendars[0];\n  console.log(`Calendar '${targetCalendarName}' not found, using: ${targetCalendar?.name}`);\n}\n\nreturn {\n  json: {\n    ...transformedData,\n    office365CalendarId: targetCalendar?.id\n  }\n};"
+      },
+      "id": "code-find-calendar-create",
+      "name": "Find Calendar (Create)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1580, 180]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.microsoft.com/v1.0/me/calendar/events",
+        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [\"Strike Team\"],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
+        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [{{ JSON.stringify($json.categoryName) }}],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
         "options": {}
       },
       "id": "http-create-event",
       "name": "Create Event in Office 365",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1040, 180],
+      "position": [1800, 180],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "microsoftOutlookCredential",
@@ -172,7 +320,38 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://graph.microsoft.com/v1.0/me/calendar/events",
+        "url": "https://graph.microsoft.com/v1.0/me/calendars",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "options": {}
+      },
+      "id": "http-get-calendars-update",
+      "name": "Get O365 Calendars (Update)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1360, 500],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "microsoftOutlookCredential",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Find the target calendar ID by name\nconst response = $input.item.json;\nconst calendars = response.value || [];\nconst transformedData = $('Transform for Update').item.json;\nconst targetCalendarName = transformedData.office365CalendarName;\n\n// Find calendar by name\nlet targetCalendar = calendars.find(c => c.name === targetCalendarName);\n\n// Fallback to default calendar if not found\nif (!targetCalendar) {\n  targetCalendar = calendars.find(c => c.isDefaultCalendar) || calendars[0];\n  console.log(`Calendar '${targetCalendarName}' not found, using: ${targetCalendar?.name}`);\n}\n\nreturn {\n  json: {\n    ...transformedData,\n    office365CalendarId: targetCalendar?.id\n  }\n};"
+      },
+      "id": "code-find-calendar-update",
+      "name": "Find Calendar (Update)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1580, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
         "sendHeaders": true,
@@ -189,7 +368,7 @@
             "values": [
               {
                 "name": "$filter",
-                "value": "categories/any(c:c eq 'Strike Team')"
+                "value": "=categories/any(c:c eq '{{ $json.categoryName }}')"
               },
               {
                 "name": "$select",
@@ -207,7 +386,7 @@
       "name": "Get Synced Events (Update)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1040, 500],
+      "position": [1800, 500],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "microsoftOutlookCredential",
@@ -218,7 +397,38 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://graph.microsoft.com/v1.0/me/calendar/events",
+        "url": "https://graph.microsoft.com/v1.0/me/calendars",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "options": {}
+      },
+      "id": "http-get-calendars-delete",
+      "name": "Get O365 Calendars (Delete)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1140, 820],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "microsoftOutlookCredential",
+          "name": "Microsoft Outlook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Find the target calendar ID by name\nconst response = $input.item.json;\nconst calendars = response.value || [];\nconst deleteData = $('Extract Delete ID').item.json;\nconst targetCalendarName = deleteData.office365CalendarName;\n\n// Find calendar by name\nlet targetCalendar = calendars.find(c => c.name === targetCalendarName);\n\n// Fallback to default calendar if not found\nif (!targetCalendar) {\n  targetCalendar = calendars.find(c => c.isDefaultCalendar) || calendars[0];\n  console.log(`Calendar '${targetCalendarName}' not found, using: ${targetCalendar?.name}`);\n}\n\nreturn {\n  json: {\n    ...deleteData,\n    office365CalendarId: targetCalendar?.id\n  }\n};"
+      },
+      "id": "code-find-calendar-delete",
+      "name": "Find Calendar (Delete)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1360, 820]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
         "sendHeaders": true,
@@ -235,7 +445,7 @@
             "values": [
               {
                 "name": "$filter",
-                "value": "categories/any(c:c eq 'Strike Team')"
+                "value": "=categories/any(c:c eq '{{ $json.categoryName }}')"
               },
               {
                 "name": "$select",
@@ -253,7 +463,7 @@
       "name": "Get Synced Events (Delete)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [780, 820],
+      "position": [1580, 820],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "microsoftOutlookCredential",
@@ -264,24 +474,24 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Find the matching Office 365 event by tracking ID\nconst response = $input.item.json;\nconst syncedEvents = response.value || [];\nconst transformedData = $('Transform for Update').item.json;\nconst trackingId = transformedData.trackingId;\n\n// Log for debugging\nconsole.log('Looking for tracking ID:', trackingId);\nconsole.log('Number of Strike Team events found:', syncedEvents.length);\n\n// Search ONLY in Strike Team events for our tracking ID\nlet outlookEventId = null;\nfor (const event of syncedEvents) {\n  // Check in body content (text format requested)\n  const bodyContent = event.body?.content || '';\n  const bodyPreview = event.bodyPreview || '';\n  \n  // Look for our tracking marker in various formats\n  const searchPattern = `GCAL_SYNC_ID:${trackingId}`;\n  \n  if (bodyContent.includes(searchPattern) || bodyPreview.includes(searchPattern)) {\n    outlookEventId = event.id;\n    console.log('Found matching event:', event.subject, event.id);\n    break;\n  }\n}\n\nif (!outlookEventId) {\n  console.log('No matching event found for tracking ID:', trackingId);\n}\n\nreturn {\n  json: {\n    found: outlookEventId !== null,\n    outlookEventId: outlookEventId,\n    debugEventsCount: syncedEvents.length,\n    searchedForId: trackingId,\n    ...transformedData\n  }\n};"
+        "jsCode": "// Find the matching Office 365 event by tracking ID\nconst response = $input.item.json;\nconst syncedEvents = response.value || [];\nconst transformedData = $('Find Calendar (Update)').item.json;\nconst trackingId = transformedData.trackingId;\n\n// Log for debugging\nconsole.log('Looking for tracking ID:', trackingId);\nconsole.log('Number of synced events found:', syncedEvents.length);\n\n// Search ONLY in category-tagged events for our tracking ID\nlet outlookEventId = null;\nfor (const event of syncedEvents) {\n  const bodyContent = event.body?.content || '';\n  const bodyPreview = event.bodyPreview || '';\n  \n  const searchPattern = `GCAL_SYNC_ID:${trackingId}`;\n  \n  if (bodyContent.includes(searchPattern) || bodyPreview.includes(searchPattern)) {\n    outlookEventId = event.id;\n    console.log('Found matching event:', event.subject, event.id);\n    break;\n  }\n}\n\nif (!outlookEventId) {\n  console.log('No matching event found for tracking ID:', trackingId);\n}\n\nreturn {\n  json: {\n    found: outlookEventId !== null,\n    outlookEventId: outlookEventId,\n    debugEventsCount: syncedEvents.length,\n    searchedForId: trackingId,\n    ...transformedData\n  }\n};"
       },
       "id": "code-find-event-update",
       "name": "Find Matching Event",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1300, 500]
+      "position": [2020, 500]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Find the matching Office 365 event by tracking ID for deletion\nconst response = $input.item.json;\nconst syncedEvents = response.value || [];\nconst deleteData = $('Extract Delete ID').item.json;\nconst trackingId = deleteData.trackingId;\n\n// Log for debugging\nconsole.log('DELETE - Looking for tracking ID:', trackingId);\nconsole.log('DELETE - Number of Strike Team events found:', syncedEvents.length);\n\n// Search ONLY in Strike Team events for our tracking ID\nlet outlookEventId = null;\nfor (const event of syncedEvents) {\n  // Check in body content (text format requested)\n  const bodyContent = event.body?.content || '';\n  const bodyPreview = event.bodyPreview || '';\n  \n  // Look for our tracking marker\n  const searchPattern = `GCAL_SYNC_ID:${trackingId}`;\n  \n  if (bodyContent.includes(searchPattern) || bodyPreview.includes(searchPattern)) {\n    outlookEventId = event.id;\n    console.log('DELETE - Found matching event:', event.subject, event.id);\n    break;\n  }\n}\n\nif (!outlookEventId) {\n  console.log('DELETE - No matching event found for tracking ID:', trackingId);\n}\n\nreturn {\n  json: {\n    found: outlookEventId !== null,\n    outlookEventId: outlookEventId,\n    debugEventsCount: syncedEvents.length,\n    searchedForId: trackingId\n  }\n};"
+        "jsCode": "// Find the matching Office 365 event by tracking ID for deletion\nconst response = $input.item.json;\nconst syncedEvents = response.value || [];\nconst deleteData = $('Find Calendar (Delete)').item.json;\nconst trackingId = deleteData.trackingId;\n\n// Log for debugging\nconsole.log('DELETE - Looking for tracking ID:', trackingId);\nconsole.log('DELETE - Number of synced events found:', syncedEvents.length);\n\n// Search ONLY in category-tagged events for our tracking ID\nlet outlookEventId = null;\nfor (const event of syncedEvents) {\n  const bodyContent = event.body?.content || '';\n  const bodyPreview = event.bodyPreview || '';\n  \n  const searchPattern = `GCAL_SYNC_ID:${trackingId}`;\n  \n  if (bodyContent.includes(searchPattern) || bodyPreview.includes(searchPattern)) {\n    outlookEventId = event.id;\n    console.log('DELETE - Found matching event:', event.subject, event.id);\n    break;\n  }\n}\n\nif (!outlookEventId) {\n  console.log('DELETE - No matching event found for tracking ID:', trackingId);\n}\n\nreturn {\n  json: {\n    found: outlookEventId !== null,\n    outlookEventId: outlookEventId,\n    debugEventsCount: syncedEvents.length,\n    searchedForId: trackingId,\n    office365CalendarId: deleteData.office365CalendarId\n  }\n};"
       },
       "id": "code-find-event-delete",
       "name": "Find Event to Delete",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1040, 820]
+      "position": [1800, 820]
     },
     {
       "parameters": {
@@ -298,7 +508,7 @@
       "name": "Event Found?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1560, 500]
+      "position": [2240, 500]
     },
     {
       "parameters": {
@@ -315,24 +525,24 @@
       "name": "Event Found for Delete?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1300, 820]
+      "position": [2020, 820]
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://graph.microsoft.com/v1.0/me/calendar/events/{{ $json.outlookEventId }}",
+        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events/{{ $json.outlookEventId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [\"Strike Team\"],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
+        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [{{ JSON.stringify($json.categoryName) }}],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
         "options": {}
       },
       "id": "http-update-event",
       "name": "Update Event in Office 365",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1820, 420],
+      "position": [2500, 420],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "microsoftOutlookCredential",
@@ -343,19 +553,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://graph.microsoft.com/v1.0/me/calendar/events",
+        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [\"Strike Team\"],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
+        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [{{ JSON.stringify($json.categoryName) }}],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
         "options": {}
       },
       "id": "http-create-event-from-update",
       "name": "Create Event (Not Found)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1820, 580],
+      "position": [2500, 580],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "microsoftOutlookCredential",
@@ -366,7 +576,7 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "=https://graph.microsoft.com/v1.0/me/calendar/events/{{ $json.outlookEventId }}",
+        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events/{{ $json.outlookEventId }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftOutlookOAuth2Api",
         "options": {}
@@ -375,7 +585,7 @@
       "name": "Delete Event from Office 365",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1560, 760],
+      "position": [2280, 760],
       "credentials": {
         "microsoftOutlookOAuth2Api": {
           "id": "microsoftOutlookCredential",
@@ -389,7 +599,7 @@
       "name": "Create Success",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1300, 180]
+      "position": [2020, 180]
     },
     {
       "parameters": {},
@@ -397,7 +607,7 @@
       "name": "Update/Create Success",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [2080, 500]
+      "position": [2760, 500]
     },
     {
       "parameters": {},
@@ -405,7 +615,7 @@
       "name": "Delete Success",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1820, 760]
+      "position": [2540, 760]
     },
     {
       "parameters": {},
@@ -413,7 +623,7 @@
       "name": "Not Found - Skip Delete",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [1560, 880]
+      "position": [2280, 880]
     }
   ],
   "connections": {
@@ -421,7 +631,7 @@
       "main": [
         [
           {
-            "node": "Get Full Event Details (Create)",
+            "node": "⚙️ CONFIG (Create)",
             "type": "main",
             "index": 0
           }
@@ -432,7 +642,7 @@
       "main": [
         [
           {
-            "node": "Get Full Event Details (Update)",
+            "node": "⚙️ CONFIG (Update)",
             "type": "main",
             "index": 0
           }
@@ -440,6 +650,72 @@
       ]
     },
     "Google Calendar - Event Cancelled": {
+      "main": [
+        [
+          {
+            "node": "⚙️ CONFIG (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIG (Create)": {
+      "main": [
+        [
+          {
+            "node": "Merge Config (Create)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIG (Update)": {
+      "main": [
+        [
+          {
+            "node": "Merge Config (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ CONFIG (Delete)": {
+      "main": [
+        [
+          {
+            "node": "Merge Config (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Config (Create)": {
+      "main": [
+        [
+          {
+            "node": "Get Full Event Details (Create)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Config (Update)": {
+      "main": [
+        [
+          {
+            "node": "Get Full Event Details (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Config (Delete)": {
       "main": [
         [
           {
@@ -476,7 +752,7 @@
       "main": [
         [
           {
-            "node": "Create Event in Office 365",
+            "node": "Get O365 Calendars (Create)",
             "type": "main",
             "index": 0
           }
@@ -487,7 +763,29 @@
       "main": [
         [
           {
-            "node": "Get Synced Events (Update)",
+            "node": "Get O365 Calendars (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get O365 Calendars (Create)": {
+      "main": [
+        [
+          {
+            "node": "Find Calendar (Create)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Calendar (Create)": {
+      "main": [
+        [
+          {
+            "node": "Create Event in Office 365",
             "type": "main",
             "index": 0
           }
@@ -499,6 +797,28 @@
         [
           {
             "node": "Create Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get O365 Calendars (Update)": {
+      "main": [
+        [
+          {
+            "node": "Find Calendar (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Calendar (Update)": {
+      "main": [
+        [
+          {
+            "node": "Get Synced Events (Update)",
             "type": "main",
             "index": 0
           }
@@ -568,6 +888,28 @@
       ]
     },
     "Extract Delete ID": {
+      "main": [
+        [
+          {
+            "node": "Get O365 Calendars (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get O365 Calendars (Delete)": {
+      "main": [
+        [
+          {
+            "node": "Find Calendar (Delete)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Calendar (Delete)": {
       "main": [
         [
           {
