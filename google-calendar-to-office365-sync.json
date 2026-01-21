@@ -251,7 +251,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\nconst config = $('Merge Config (Create)').item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName\n  }\n};"
+        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\nconst config = $('Merge Config (Create)').item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add link to original Google Calendar event at the top\nif (event.htmlLink) {\n  bodyContent += '<p><strong>📆 <a href=\"' + event.htmlLink + '\">View in Google Calendar</a></strong></p>';\n  bodyContent += '<hr><br>';\n}\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += '<p><a href=\"' + event.hangoutLink + '\">' + event.hangoutLink + '</a></p>';\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += '<p>📹 Video: <a href=\"' + entry.uri + '\">' + entry.uri + '</a>';\n        if (entry.meetingCode) {\n          bodyContent += ' (Code: ' + entry.meetingCode + ')';\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += '<p>📞 Phone: ' + (entry.label || entry.uri);\n        if (entry.pin) {\n          bodyContent += ' PIN: ' + entry.pin;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += '<p>🖥️ SIP: ' + entry.uri + '</p>';\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += '<p><em>' + conf.notes + '</em></p>';\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += '<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:' + trackingId + ']</p>';\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName\n  }\n};"
       },
       "id": "code-transform-create",
       "name": "Transform for Create",
@@ -262,7 +262,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\nconst config = $('Merge Config (Update)').item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += `<p><a href=\"${event.hangoutLink}\">${event.hangoutLink}</a></p>`;\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += `<p>📹 Video: <a href=\"${entry.uri}\">${entry.uri}</a>`;\n        if (entry.meetingCode) {\n          bodyContent += ` (Code: ${entry.meetingCode})`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += `<p>📞 Phone: ${entry.label || entry.uri}`;\n        if (entry.pin) {\n          bodyContent += ` PIN: ${entry.pin}`;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += `<p>🖥️ SIP: ${entry.uri}</p>`;\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += `<p><em>${conf.notes}</em></p>`;\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += `<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:${trackingId}]</p>`;\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName\n  }\n};"
+        "jsCode": "// Transform Google Calendar event to Office 365 format\nconst event = $input.item.json;\nconst config = $('Merge Config (Update)').item.json;\n\n// Build the event body with description\nlet bodyContent = '';\n\n// Add link to original Google Calendar event at the top\nif (event.htmlLink) {\n  bodyContent += '<p><strong>📆 <a href=\"' + event.htmlLink + '\">View in Google Calendar</a></strong></p>';\n  bodyContent += '<hr><br>';\n}\n\n// Add original description if exists\nif (event.description) {\n  bodyContent += event.description;\n}\n\n// Add Google Meet/Hangouts link if available\nif (event.hangoutLink) {\n  bodyContent += '<br><br><hr>';\n  bodyContent += '<p><strong>🎥 Google Meet</strong></p>';\n  bodyContent += '<p><a href=\"' + event.hangoutLink + '\">' + event.hangoutLink + '</a></p>';\n}\n\n// Add detailed conference data if available\nif (event.conferenceData) {\n  const conf = event.conferenceData;\n  \n  if (!event.hangoutLink && conf.entryPoints) {\n    bodyContent += '<br><br><hr>';\n    bodyContent += '<p><strong>📅 Conference Details</strong></p>';\n  }\n  \n  if (conf.entryPoints && conf.entryPoints.length > 0) {\n    for (const entry of conf.entryPoints) {\n      if (entry.entryPointType === 'video' && entry.uri !== event.hangoutLink) {\n        bodyContent += '<p>📹 Video: <a href=\"' + entry.uri + '\">' + entry.uri + '</a>';\n        if (entry.meetingCode) {\n          bodyContent += ' (Code: ' + entry.meetingCode + ')';\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'phone') {\n        bodyContent += '<p>📞 Phone: ' + (entry.label || entry.uri);\n        if (entry.pin) {\n          bodyContent += ' PIN: ' + entry.pin;\n        }\n        bodyContent += '</p>';\n      } else if (entry.entryPointType === 'sip') {\n        bodyContent += '<p>🖥️ SIP: ' + entry.uri + '</p>';\n      }\n    }\n  }\n  \n  if (conf.notes) {\n    bodyContent += '<p><em>' + conf.notes + '</em></p>';\n  }\n}\n\n// Add sync tracking marker - use a simple, searchable format\nconst trackingId = event.id;\nbodyContent += '<br><hr>';\nbodyContent += '<p style=\"font-size:10px;color:#888;\">[GCAL_SYNC_ID:' + trackingId + ']</p>';\n\n// Determine if this is an all-day event\nconst isAllDay = !!(event.start?.date && !event.start?.dateTime);\n\n// Format dates\nlet startDateTime, endDateTime;\nif (isAllDay) {\n  startDateTime = event.start.date;\n  endDateTime = event.end.date;\n} else {\n  startDateTime = event.start?.dateTime || event.start?.date;\n  endDateTime = event.end?.dateTime || event.end?.date;\n}\n\n// Get timezone\nconst timeZone = event.start?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';\n\n// Map show as status\nlet showAs = 'busy';\nif (event.transparency === 'transparent') {\n  showAs = 'free';\n}\n\n// Map sensitivity\nlet sensitivity = 'normal';\nif (event.visibility === 'private' || event.visibility === 'confidential') {\n  sensitivity = 'private';\n}\n\nreturn {\n  json: {\n    trackingId: trackingId,\n    subject: event.summary || '(No Title)',\n    bodyContent: bodyContent,\n    isAllDay: isAllDay,\n    startDateTime: startDateTime,\n    endDateTime: endDateTime,\n    timeZone: timeZone,\n    location: event.location || '',\n    showAs: showAs,\n    sensitivity: sensitivity,\n    office365CalendarName: config.office365CalendarName,\n    categoryName: config.categoryName\n  }\n};"
       },
       "id": "code-transform-update",
       "name": "Transform for Update",
@@ -593,27 +593,14 @@
       }
     },
     {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://graph.microsoft.com/v1.0/me/calendars/{{ $json.office365CalendarId }}/events",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "microsoftOutlookOAuth2Api",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"subject\": {{ JSON.stringify($json.subject) }},\n  \"body\": {\n    \"contentType\": \"HTML\",\n    \"content\": {{ JSON.stringify($json.bodyContent) }}\n  },\n  \"start\": {\n    \"dateTime\": {{ JSON.stringify($json.startDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"end\": {\n    \"dateTime\": {{ JSON.stringify($json.endDateTime) }},\n    \"timeZone\": {{ JSON.stringify($json.timeZone) }}\n  },\n  \"location\": {\n    \"displayName\": {{ JSON.stringify($json.location) }}\n  },\n  \"categories\": [{{ JSON.stringify($json.categoryName) }}],\n  \"showAs\": {{ JSON.stringify($json.showAs) }},\n  \"sensitivity\": {{ JSON.stringify($json.sensitivity) }},\n  \"isAllDay\": {{ $json.isAllDay }}\n}",
-        "options": {}
-      },
-      "id": "http-create-event-from-update",
-      "name": "Create Event (Not Found)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "parameters": {},
+      "id": "noop-skip-update",
+      "name": "Skip - Event Not Found",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
       "position": [2500, 580],
-      "credentials": {
-        "microsoftOutlookOAuth2Api": {
-          "id": "microsoftOutlookCredential",
-          "name": "Microsoft Outlook account"
-        }
-      }
+      "notesInFlow": true,
+      "notes": "Event not found in O365 - skipping update.\nThis prevents duplicates when Update trigger\nfires before Create has finished."
     },
     {
       "parameters": {
@@ -646,7 +633,7 @@
     {
       "parameters": {},
       "id": "noop-update-success",
-      "name": "Update/Create Success",
+      "name": "Update Success",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [2760, 500]
@@ -900,7 +887,7 @@
         ],
         [
           {
-            "node": "Create Event (Not Found)",
+            "node": "Skip - Event Not Found",
             "type": "main",
             "index": 0
           }
@@ -911,18 +898,7 @@
       "main": [
         [
           {
-            "node": "Update/Create Success",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Event (Not Found)": {
-      "main": [
-        [
-          {
-            "node": "Update/Create Success",
+            "node": "Update Success",
             "type": "main",
             "index": 0
           }
